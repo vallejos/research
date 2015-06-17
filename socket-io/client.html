@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <title>Socket IO Client</title>
+<!--
+        <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+        <script src="node_modules/socket.io-client-0.9.17/node_modules/socket.io-client/dist/socket.io.js"></script>
+-->
+        <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+        <script>
+
+console.log(io);
+
+/**
+ * Options:
+ * reconnection whether to reconnect automatically (true)
+ * reconnectionAttempts (Infinity) before giving up
+ * reconnectionDelay how long to initially wait before attempting a new reconnection (1000). Affected by +/- randomizationFactor, for example the default initial delay will be between 500 to 1500ms.
+ * reconnectionDelayMax maximum amount of time to wait between reconnections (5000). Each attempt increases the reconnection delay by 2x along with a randomization as above
+ * randomizationFactor(0.5`), 0 <= randomizationFactor <= 1
+ * timeout connection timeout before a connect_error and connect_timeout events are emitted (20000)
+ * autoConnect by setting this false, you have to call manager.open whenever you decide it's appropriate
+ * @type {{reconnectionAttempts: number, reconnectionDelay: number}}
+ */
+var prodApi = 'wss://v2-cloud-api.percona.com/';
+var stageApi = 'wss://stage-cloud-api.percona.com/';
+var wsUrl = stageApi;
+var wsConnOptions = {
+    reconnectionAttempts: 1,
+    reconnectionDelay: 3000,
+    timeout: 5000,
+    path: '/chart',
+    reconnection: false,
+    autoConnect: true,
+    secure: true,
+    transports: ['websocket']
+//    transports: ['polling-xhr','websocket']
+};
+
+//var socket = io(wsUrl, wsConnOptions);
+var socket = io.connect('https://v2-cloud-api.percona.com:443/chart'); // it's not a path, it's a namespace!
+
+/**
+ * Manager Events:
+ * connect_error. Fired upon a connection error. Parameters:
+ *      Object error object
+ * connect_timeout. Fired upon a connection timeout.
+ * reconnect. Fired upon a successful reconnection. Parameters:
+ *      Number reconnection attempt number
+ * reconnect_attempt. Fired upon an attempt to reconnect.
+ * reconnecting. Fired upon an attempt to reconnect. Parameters:
+ *      Number reconnection attempt number
+ * reconnect_error. Fired upon a reconnection attempt error. Parameters:
+ *      Object error object
+ * reconnect_failed. Fired when couldn't reconnect within reconnectionAttempts
+ * ping. Fired when a ping packet is written out to the server.
+ * pong. Fired when a pong is received from the server. Parameters:
+ *      Number number of ms elapsed since ping packet (i.e.: latency).
+ */
+socket.on('connect_error', function(error) {
+    console.log('connect_error', error);
+});
+socket.on('connect_timeout', function() {
+    console.log('connect_timeout');
+});
+socket.on('reconnect', function(attempt) {
+    console.log('reconnect #', attempt);
+});
+socket.on('reconnect_attempt', function() {
+    console.log('reconnect_attempt');
+});
+socket.on('reconnecting', function(attemptNumber) {
+    console.log('reconnecting #',attemptNumber);
+});
+socket.on('reconnect_error', function(error) {
+    console.log('reconnect_error', error);
+});
+socket.on('reconnect_failed', function() {
+    console.log('reconnect_failed');
+});
+socket.on('ping', function() {
+    console.log('ping');
+});
+socket.on('pong', function(latency) {
+    console.log('pong ',latency);
+});
+
+//socket.connect();
+
+/**
+ * Socket Events:
+ * connect. Fired upon a connection including a successful reconnection.
+ * error. Fired upon a connection error Parameters:
+ *      Object error data
+ * disconnect. Fired upon a disconnection.
+ * reconnect. Fired upon a successful reconnection. Parameters:
+ *      Number reconnection attempt number
+ * reconnect_attempt. Fired upon an attempt to reconnect.
+ * reconnecting. Fired upon an attempt to reconnect. Parameters:
+ *      Number reconnection attempt number
+ * reconnect_error. Fired upon a reconnection attempt error. Parameters:
+ *      Object error object
+ * reconnect_failed. Fired when couldn't reconnect within reconnectionAttempts
+ *
+ * OBS:
+ *  Socket Events extend Manager Events, so we don't need to set the listeners for the same listeners that
+ *  we set on the Manager.
+ */
+
+socket.on('connect', function() {
+    console.log('connect');
+
+    console.log('Emitting Auth message...');
+    var authMsg = '{"ApiKey":"5ece60bde7663364824fc3215ad40a50","Id":1}';
+    socket.send('auth msg', authMsg);
+    console.log('Sent: ',authMsg);
+
+    console.log('Listening / Receiving response...');
+    socket.on('auth msg', function(msg) {
+        console.log('Received: ',msg);
+        console.log('should be : {"Code":200,"Error":""}');
+    });
+
+});
+socket.on('error', function(error) {
+    console.log('error', error);
+});
+socket.on('disconnect', function() {
+    console.log('disconnect');
+});
+/*
+socket.on('connection', function(socket){
+    console.log('a user connected');
+    socket.on('disconnect', function(){
+        console.log('user disconnected');
+    });
+});
+*/
+
+/*
+            var newMsg = '{"Metrics":[{"InstanceId":60,"Service":"mysql","Name":"mysql/queries","Stat":"avg"}],"Sysconfig":[],"Group":"1 minute","Begin":"2015-06-10 20:43:00","End":"last","Id":16}';
+            socket.emit('new msg', newMsg);
+            console.log('Sent: ',newMsg);
+
+            socket.on('new msg', function(msg) {
+                console.log('Received: ',msg);
+                // should be:
+                // {"Id":16,"Error":"","Series":[{"Error":"","Data":[{"Begin":1433968980,"End":1433969040,"Count":1,"Duration":60,"Y":33.483333},{"Begin":1433969040,"End":1433969100,"Count":1,"Duration":60,"Y":36.95}]}],"ConnectionId":"8f6f7998-4ddf-43be-4826-fdd6cb1aaf39","ResponseTime":0.002896458}
+            });
+
+*/
+
+        </script>
+    </head>
+    <body>
+
+    </body>
+</html>
